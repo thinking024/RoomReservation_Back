@@ -1,0 +1,7 @@
+.idea
+.idea/*
+*.class
+target
+target/*
+*Test*
+*test*
