@@ -1,17 +1,50 @@
 package com.example.roomreservation.interceptor;
 
+import com.alibaba.fastjson.JSON;
+import com.example.roomreservation.annotation.AdminToken;
 import com.example.roomreservation.annotation.PassToken;
-import com.example.roomreservation.annotation.UserToken;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.roomreservation.common.BaseContext;
+import com.example.roomreservation.common.JsonResult;
+import com.example.roomreservation.util.JWTUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.util.Map;
 
+@Slf4j
+@Component
 public class AuthenticationInterceptor implements HandlerInterceptor {
+
+    /**
+     * 以字符流的方式向响应体中写入json
+     * @param response
+     * @param result
+     */
+    private void result(HttpServletResponse response, JsonResult result) {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json; charset=utf-8");
+        response.setStatus(200);
+        PrintWriter out = null;
+        try {
+            out = response.getWriter();
+            out.append(JSON.toJSONString(result));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                out.close();
+            }
+        }
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object object) throws Exception {
         // 如果不是映射到方法直接通过
@@ -22,41 +55,39 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         HandlerMethod handlerMethod = (HandlerMethod) object;
         Method method = handlerMethod.getMethod();
 
-        //检查是否有passtoken注释，有则跳过认证
+        // 检查是否有passtoken注释，有则跳过认证
         if (method.isAnnotationPresent(PassToken.class)) {
             PassToken passToken = method.getAnnotation(PassToken.class);
             if (passToken.required()) {
+                log.info("pass token");
                 return true;
             }
         }
 
-        String token = httpServletRequest.getHeader("token");// 从 http 请求头中取出 token
-        //检查有没有需要用户权限的注解
-        if (method.isAnnotationPresent(UserToken.class)) {
-            UserToken userLoginToken = method.getAnnotation(UserToken.class);
-            if (userLoginToken.required()) {
+        String token = httpServletRequest.getHeader("token");
+
+        // 管理员权限检查
+        if (method.isAnnotationPresent(AdminToken.class)) {
+            AdminToken adminToken = method.getAnnotation(AdminToken.class);
+            if (adminToken.required()) {
                 // 执行认证
-                /*if (token == null) {
-                    throw new RuntimeException("无token，请重新登录");
+                if (token == null) {
+                    log.warn("admin not login");
+                    result(httpServletResponse, JsonResult.error(201, "账户未登录"));
+                    return false;
                 }
-                // 获取 token 中的 user id
-                String userId;
-                try {
-                    userId = JWT.decode(token).getAudience().get(0);
-                } catch (JWTDecodeException j) {
-                    throw new RuntimeException("401");
+
+                Map<String, Integer> map = JWTUtil.parseToken(token);
+                if (map == null || map.size() == 0) {
+                    log.warn("admin token error");
+                    result(httpServletResponse, JsonResult.error(203, "token信息错误"));
+                    return false;
                 }
-                User user = userService.findUserById(userId);
-                if (user == null) {
-                    throw new RuntimeException("用户不存在，请重新登录");
-                }
-                // 验证 token
-                JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(user.getPassword())).build();
-                try {
-                    jwtVerifier.verify(token);
-                } catch (JWTVerificationException e) {
-                    throw new RuntimeException("401");
-                }*/
+
+                Integer id = map.get("id");
+                log.info("admin: " + id);
+                BaseContext.setCurrentId(id);
+
                 return true;
             }
         }
