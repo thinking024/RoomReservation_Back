@@ -14,8 +14,6 @@ public class JsonResult<T> {
     private Integer code;
     private String msg;
     private T data;
-    // 动态数据
-    private Map map;
 
     private JsonResult() {
     }
@@ -40,13 +38,5 @@ public class JsonResult<T> {
         r.msg = msg;
         r.code = 0;
         return r;
-    }
-
-    public JsonResult<T> add(String key, Object value) {
-        if (map == null) {
-           map = new HashMap();
-        }
-        this.map.put(key, value);
-        return this;
     }
 }
