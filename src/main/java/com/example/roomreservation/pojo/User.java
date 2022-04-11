@@ -1,7 +1,10 @@
 package com.example.roomreservation.pojo;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
+@Data
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -10,5 +13,6 @@ public class User implements Serializable {
     private String password;
     private String name;
     private String telephone;
+    private Integer status;
     private Integer count;
 }

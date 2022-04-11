@@ -2,9 +2,6 @@ package com.example.roomreservation.common;
 
 import lombok.Data;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * 通用返回结果，服务端响应的数据最终都会封装成此对象
  * @param <T>
@@ -16,6 +13,14 @@ public class JsonResult<T> {
     private T data;
 
     private JsonResult() {
+    }
+
+    public static <T> JsonResult<T> success() {
+        JsonResult<T> r = new JsonResult<T>();
+        r.data = null;
+        r.code = 100;
+        r.msg = "success";
+        return r;
     }
 
     public static <T> JsonResult<T> success(T object) {

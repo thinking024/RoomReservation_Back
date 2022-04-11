@@ -63,9 +63,13 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 return true;
             }
         }
-
-        String token = httpServletRequest.getHeader("token");
-
+        String authorization = httpServletRequest.getHeader("Authorization");
+        if (authorization == null || !authorization.contains("Bearer ")) {
+            result(httpServletResponse, JsonResult.error(201, "账户未登录"));
+            return false;
+        }
+        String token = authorization.split(" ")[1];
+        log.info("token: {}", token);
         // 管理员权限检查
         if (method.isAnnotationPresent(AdminToken.class)) {
             AdminToken adminToken = method.getAnnotation(AdminToken.class);
@@ -78,19 +82,20 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 }
 
                 Map<String, Integer> map = JWTUtil.parseToken(token);
-                if (map == null || map.size() == 0) {
+                if (map.size() == 0) {
                     log.warn("admin token error");
                     result(httpServletResponse, JsonResult.error(203, "token信息错误"));
                     return false;
                 }
 
                 Integer id = map.get("id");
-                log.info("admin: " + id);
                 BaseContext.setCurrentId(id);
 
                 return true;
             }
         }
+
+        // todo 用户权限检查
         return true;
     }
 

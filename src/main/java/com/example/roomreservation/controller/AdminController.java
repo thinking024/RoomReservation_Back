@@ -1,7 +1,9 @@
 package com.example.roomreservation.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.roomreservation.annotation.AdminToken;
 import com.example.roomreservation.annotation.PassToken;
+import com.example.roomreservation.common.BaseContext;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.pojo.Admin;
 import com.example.roomreservation.service.AdminService;
@@ -30,5 +32,13 @@ public class AdminController {
             return JsonResult.error(202, "账户或密码错误");
         }
         return JsonResult.success(JWTUtil.createToken(one.getId()));
+    }
+
+    @AdminToken
+    @PostMapping("/logout")
+    public JsonResult logout() {
+        // todo 清除token
+        BaseContext.removeCurrentId();
+        return JsonResult.success();
     }
 }

@@ -6,7 +6,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +14,7 @@ public class JWTUtil {
     private static final String KEY = "thinking024";
 
     // todo token中仅存放id，还是Admin与User的父类Person
+    // todo 是否采用用户密码对token进行加密签名
     // todo 以声明的方式放入id，还是以audience的方式放入
     public static String createToken(Integer id){
         /*Calendar calendar = Calendar.getInstance();
@@ -33,8 +33,6 @@ public class JWTUtil {
         Claim id = decodedjwt.getClaim("id");
         log.info("token id=" + id);
         map.put("id", id.asInt());
-        log.warn(String.valueOf(id == null));
-        log.info("map id=" + map.get("id"));
         return map;
     }
 }
