@@ -24,7 +24,7 @@ public class UserController {
 
     @PassToken
     @PostMapping("/login")
-    public JsonResult login(@RequestBody User user) {
+    public JsonResult<String> login(@RequestBody User user) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getAccount, user.getAccount());
         wrapper.eq(User::getPassword, user.getPassword());
@@ -38,7 +38,7 @@ public class UserController {
     // todo 批量新增用户
     @AdminToken
     @PostMapping("/addBatch")
-    public JsonResult addBatch(@RequestBody List<User> users) {
+    public JsonResult<String> addBatch(@RequestBody List<User> users) {
         if (userService.saveBatch(users)) {
             return JsonResult.success();
         }
@@ -46,10 +46,9 @@ public class UserController {
     }
 
     @AdminToken
-    @PostMapping("/add")
-    public JsonResult add(@RequestBody User user) {
-        boolean result = userService.save(user);
-        if (result) {
+    @PostMapping()
+    public JsonResult<String> add(@RequestBody User user) {
+        if (userService.save(user)) {
             return JsonResult.success();
         }
         return JsonResult.error(301, "添加失败");
@@ -57,17 +56,17 @@ public class UserController {
 
     @AdminToken
     @DeleteMapping()
-    public JsonResult delete(@RequestParam List<Integer> ids) {
-        boolean result = userService.removeByIds(ids);
-        if (result) {
+    public JsonResult<String> delete(Integer id) {
+        if (userService.removeById(id)) {
             return JsonResult.success();
         }
         return JsonResult.error(301, "删除失败");
     }
 
+    // todo 对于姓名、电话为null，并不会将其置为null，而是保留原来的值
     @AdminToken
     @PutMapping()
-    public JsonResult update(@RequestBody User user) {
+    public JsonResult<String> update(@RequestBody User user) {
         boolean result = userService.updateById(user);
         if (result) {
             return JsonResult.success();
@@ -77,12 +76,12 @@ public class UserController {
 
     @AdminToken
     @GetMapping("/page")
-    public JsonResult<Page> page(int page, int pageSize, String account) {
+    public JsonResult<Page<User>> page(int page, int pageSize, String account) {
         log.info("page = {},pageSize = {}", page, pageSize);
         // 构造分页构造器
-        Page pageInfo = new Page(page, pageSize);
+        Page<User> pageInfo = new Page<>(page, pageSize);
         // 构造条件构造器
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper();
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         // 添加过滤条件，传入name时才去查询，否则不添加name查询条件
         queryWrapper.eq(StringUtils.isNotEmpty(account), User::getAccount, account);
         //添加排序条件
@@ -93,11 +92,18 @@ public class UserController {
     }
 
     @AdminToken
-    @GetMapping("/{account}")
+    @GetMapping("/account/{account}")
     public JsonResult<User> getByAccount(@PathVariable String account) {
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper();
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getAccount, account);
         User user = userService.getOne(queryWrapper);
+        return JsonResult.success(user);
+    }
+
+    @AdminToken
+    @GetMapping("/id/{id}")
+    public JsonResult<User> getById(@PathVariable Integer id) {
+        User user = userService.getById(id);
         return JsonResult.success(user);
     }
 }
