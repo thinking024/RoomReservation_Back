@@ -32,4 +32,10 @@ public class GlobalExceptionHandler {
         }
         return JsonResult.error("未知错误");
     }
+
+    @ExceptionHandler(CustomException.class)
+    public JsonResult<String> exceptionHandler(CustomException ex) {
+        log.error(ex.getMessage());
+        return JsonResult.error(ex.getMessage());
+    }
 }

@@ -17,3 +17,5 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: AUTO
+roomReservation:
+  path: E:\Java_program\RoomReservation\src\main\resources\img\
