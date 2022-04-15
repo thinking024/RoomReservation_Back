@@ -4,21 +4,27 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.roomreservation.mapper.BuidingMapper;
 import com.example.roomreservation.pojo.Building;
+import com.example.roomreservation.pojo.Room;
 import com.example.roomreservation.service.BuildingService;
+import com.example.roomreservation.service.RoomService;
 import com.example.roomreservation.util.FileUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class BuildingServiceImpl extends ServiceImpl<BuidingMapper, Building> implements BuildingService {
 
+    @Resource
+    private RoomService roomService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeBatchById(List<Integer> ids) {
-        // todo 建筑楼与房间之间的联动
+        // todo 建筑楼与房间之间删除的联动
 
         /*int count = this.count(queryWrapper);
         if(count > 0){
@@ -37,24 +43,31 @@ public class BuildingServiceImpl extends ServiceImpl<BuidingMapper, Building> im
     }
 
     /**
-     * todo 批量修改楼宇状态，同时修改房间状态
      *
      * @param status
      * @param ids
      * @return
      */
+    @Transactional
     @Override
     public boolean changeStatusBatchById(int status, List<Integer> ids) {
         if (ids == null || ids.size() == 0) {
             return false;
         }
-        ArrayList<Building> list = new ArrayList<>();
+        ArrayList<Building> buildings = new ArrayList<>();
         for (Integer id : ids) {
             Building building = new Building();
             building.setId(id);
             building.setStatus(status);
-            list.add(building);
+            buildings.add(building);
         }
-        return this.updateBatchById(list);
+        // 同时修改下属房间状态
+        LambdaQueryWrapper<Room> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Room::getBuildingId, ids);
+        List<Room> rooms = roomService.list(wrapper);
+        for (Room room : rooms) {
+            room.setStatus(status);
+        }
+        return this.updateBatchById(buildings) && roomService.updateBatchById(rooms);
     }
 }

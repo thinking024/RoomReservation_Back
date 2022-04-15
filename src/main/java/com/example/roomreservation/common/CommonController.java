@@ -1,5 +1,6 @@
 package com.example.roomreservation.common;
 
+import com.example.roomreservation.annotation.PassToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +25,7 @@ public class CommonController {
     /**
      * 通过注解获取配置文件中的属性
      */
-    @Value("${roomReservation.path}")
+    @Value("${roomreservation.path}")
     private String basePath;
 
     /**
@@ -62,8 +63,9 @@ public class CommonController {
      * @param name     待下载的文件名
      * @param response
      */
+    @PassToken
     @GetMapping("/download")
-    public void download(String name, HttpServletResponse response) {
+    public void download(@RequestParam String name, HttpServletResponse response) {
         try {
             //输入流，通过输入流读取文件内容
             FileInputStream fileInputStream = new FileInputStream(basePath + name);

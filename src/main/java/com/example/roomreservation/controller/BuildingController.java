@@ -90,6 +90,7 @@ public class BuildingController {
      * @param ids
      * @return
      */
+    @AdminToken
     @PostMapping("/status/{type}")
     public JsonResult<String> changeStatus(@PathVariable int type, @RequestParam List<Integer> ids) {
         log.info("type=" + type + "");
@@ -107,6 +108,7 @@ public class BuildingController {
      * @param ids
      * @return
      */
+    @AdminToken
     @DeleteMapping
     public JsonResult<String> delete(@RequestParam List<Integer> ids) {
         log.info("ids:{}", ids);
