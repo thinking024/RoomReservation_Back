@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.roomreservation.annotation.AdminToken;
 import com.example.roomreservation.annotation.PassToken;
+import com.example.roomreservation.annotation.UserToken;
+import com.example.roomreservation.common.BaseContext;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.pojo.User;
 import com.example.roomreservation.service.UserService;
@@ -32,7 +34,7 @@ public class UserController {
         if (one == null) {
             return JsonResult.error(202, "账户或密码错误");
         }
-        return JsonResult.success(JWTUtil.createToken(one.getId()));
+        return JsonResult.success(JWTUtil.createToken(one.getId(), 0));
     }
 
     // todo 批量新增用户
@@ -104,6 +106,18 @@ public class UserController {
     @GetMapping("/id/{id}")
     public JsonResult<User> getById(@PathVariable Integer id) {
         User user = userService.getById(id);
+        return JsonResult.success(user);
+    }
+
+    /**
+     * todo me
+     *
+     * @return
+     */
+    @UserToken
+    @GetMapping("/me")
+    public JsonResult<User> getSelfInfo() {
+        User user = userService.getById(BaseContext.getCurrent().get("id"));
         return JsonResult.success(user);
     }
 }

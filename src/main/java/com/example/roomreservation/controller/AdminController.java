@@ -23,7 +23,7 @@ public class AdminController {
 
     @PassToken
     @PostMapping("/login")
-    public JsonResult login(@RequestBody Admin admin) {
+    public JsonResult<String> login(@RequestBody Admin admin) {
         LambdaQueryWrapper<Admin> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Admin::getAccount, admin.getAccount());
         wrapper.eq(Admin::getPassword, admin.getPassword());
@@ -31,14 +31,14 @@ public class AdminController {
         if (one == null) {
             return JsonResult.error(202, "账户或密码错误");
         }
-        return JsonResult.success(JWTUtil.createToken(one.getId()));
+        return JsonResult.success(JWTUtil.createToken(one.getId(), 1));
     }
 
     @AdminToken
     @PostMapping("/logout")
-    public JsonResult logout() {
+    public JsonResult<String> logout() {
         // todo 清除token
-        BaseContext.removeCurrentId();
+        BaseContext.removeCurrent();
         return JsonResult.success();
     }
 }

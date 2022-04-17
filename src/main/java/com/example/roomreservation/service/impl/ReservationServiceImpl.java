@@ -16,6 +16,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reservation> implements ReservationService {
@@ -30,9 +32,12 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     private UserService userService;
 
     @Override
-    public Page<ReservationDto> pageWithDto(int page, int pageSize) {
+    public Page<ReservationDto> pageWithDto(int page, int pageSize, LambdaQueryWrapper<Reservation> wrapper) {
         Page<Reservation> reservationPage = new Page<>(page, pageSize);
-        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
+//        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
+        if (wrapper == null) {
+            wrapper = new LambdaQueryWrapper<>();
+        }
         wrapper.orderByDesc(Reservation::getDate);
         wrapper.orderByDesc(Reservation::getBeginTime);
         this.page(reservationPage);
@@ -56,5 +61,42 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         }).collect(java.util.stream.Collectors.toList()));
 
         return reservationDtoPage;
+    }
+
+    @Override
+    public ReservationDto getByIdWithDto(Integer id) {
+        Reservation reservation = this.getById(id);
+        ReservationDto reservationDto = new ReservationDto();
+        BeanUtils.copyProperties(reservation, reservationDto);
+
+        // 获取建筑名、房间名
+        Room room = roomService.getById(reservation.getRoomId());
+        reservationDto.setRoomName(room.getName());
+        reservationDto.setBuildingName(buildingService.getById(room.getBuildingId()).getName());
+
+        // 获取用户名、账号用户名
+        User user = userService.getById(reservation.getUserId());
+        reservationDto.setUsername(user.getName());
+        reservationDto.setAccount(user.getAccount());
+        return reservationDto;
+    }
+
+    @Override
+    public List<ReservationDto> getWithDto(LambdaQueryWrapper<Reservation> wrapper) {
+        if (wrapper == null) {
+            wrapper = new LambdaQueryWrapper<>();
+        }
+        wrapper.orderByDesc(Reservation::getDate);
+        wrapper.orderByDesc(Reservation::getBeginTime);
+        List<Reservation> list = this.list(wrapper);
+        return list.stream().map(reservation -> {
+            ReservationDto reservationDto = new ReservationDto();
+            BeanUtils.copyProperties(reservation, reservationDto);
+            // 获取建筑名、房间名
+            Room room = roomService.getById(reservation.getRoomId());
+            reservationDto.setRoomName(room.getName());
+            reservationDto.setBuildingName(buildingService.getById(room.getBuildingId()).getName());
+            return reservationDto;
+        }).collect(Collectors.toList());
     }
 }

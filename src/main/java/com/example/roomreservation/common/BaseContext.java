@@ -1,18 +1,20 @@
 package com.example.roomreservation.common;
 
+import java.util.Map;
+
 /**
  * 基于ThreadLocal封装工具类，用户保存和获取当前登录用户id
  */
 public class BaseContext {
-    private static ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
+    private static ThreadLocal<Map<String, Integer>> threadLocal = new ThreadLocal<>();
 
     /**
      * 设置值
      *
-     * @param id
+     * @param map
      */
-    public static void setCurrentId(Integer id) {
-        threadLocal.set(id);
+    public static void setCurrent(Map<String, Integer> map) {
+        threadLocal.set(map);
     }
 
     /**
@@ -20,11 +22,11 @@ public class BaseContext {
      *
      * @return
      */
-    public static Integer getCurrentId() {
+    public static Map<String, Integer> getCurrent() {
         return threadLocal.get();
     }
 
-    public static void removeCurrentId() {
+    public static void removeCurrent() {
         threadLocal.remove();
     }
 }

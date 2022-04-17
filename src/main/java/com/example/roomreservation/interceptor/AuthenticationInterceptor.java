@@ -3,6 +3,7 @@ package com.example.roomreservation.interceptor;
 import com.alibaba.fastjson.JSON;
 import com.example.roomreservation.annotation.AdminToken;
 import com.example.roomreservation.annotation.PassToken;
+import com.example.roomreservation.annotation.UserToken;
 import com.example.roomreservation.common.BaseContext;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.util.JWTUtil;
@@ -32,16 +33,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=utf-8");
         response.setStatus(200);
-        PrintWriter out = null;
-        try {
-            out = response.getWriter();
+        try (PrintWriter out = response.getWriter()) {
             out.append(JSON.toJSONString(result));
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (out != null) {
-                out.close();
-            }
         }
     }
 
@@ -63,6 +58,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 return true;
             }
         }
+
         String authorization = httpServletRequest.getHeader("Authorization");
         if (authorization == null || !authorization.contains("Bearer ")) {
             result(httpServletResponse, JsonResult.error(201, "账户未登录"));
@@ -70,9 +66,33 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         }
         String token = authorization.split(" ")[1];
         log.info("token: {}", token);
+
+        // todo 用户和管理员都能访问的接口
+        if (method.isAnnotationPresent(UserToken.class) && method.isAnnotationPresent(AdminToken.class)) {
+            log.info("user and admin token");
+
+            if (token == null) {
+                log.warn("not login");
+                result(httpServletResponse, JsonResult.error(201, "账户未登录"));
+                return false;
+            }
+
+            Map<String, Integer> map = JWTUtil.parseToken(token);
+            if (map.size() == 0) {
+                log.warn("token error");
+                result(httpServletResponse, JsonResult.error(203, "token信息错误"));
+                return false;
+            }
+            log.info("type={}", map.get("type"));
+            BaseContext.setCurrent(map);
+
+            return true;
+        }
+
         // 管理员权限检查
         if (method.isAnnotationPresent(AdminToken.class)) {
             AdminToken adminToken = method.getAnnotation(AdminToken.class);
+            log.info("admin token");
             if (adminToken.required()) {
                 // 执行认证
                 if (token == null) {
@@ -87,15 +107,36 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                     result(httpServletResponse, JsonResult.error(203, "token信息错误"));
                     return false;
                 }
-
-                Integer id = map.get("id");
-                BaseContext.setCurrentId(id);
+                BaseContext.setCurrent(map);
 
                 return true;
             }
         }
 
-        // todo 用户权限检查
+        // todo 如何从token中区分用户和管理员
+        if (method.isAnnotationPresent(UserToken.class)) {
+            UserToken userToken = method.getAnnotation(UserToken.class);
+            log.info("user token");
+            if (userToken.required()) {
+                // 执行认证
+                if (token == null) {
+                    log.warn("user not login");
+                    result(httpServletResponse, JsonResult.error(201, "账户未登录"));
+                    return false;
+                }
+
+                Map<String, Integer> map = JWTUtil.parseToken(token);
+                if (map.size() == 0) {
+                    log.warn("user token error");
+                    result(httpServletResponse, JsonResult.error(203, "token信息错误"));
+                    return false;
+                }
+                BaseContext.setCurrent(map);
+
+                return true;
+            }
+        }
+
         return true;
     }
 
