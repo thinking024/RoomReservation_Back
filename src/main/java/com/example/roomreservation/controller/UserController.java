@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -66,9 +67,15 @@ public class UserController {
     }
 
     // todo 对于姓名、电话为null，并不会将其置为null，而是保留原来的值
+    @UserToken
     @AdminToken
     @PutMapping()
     public JsonResult<String> update(@RequestBody User user) {
+        // 用户登录，只能修改自己的信息
+        Map<String, Integer> map = BaseContext.getCurrent();
+        if (map.get("type").equals(0) && !user.getId().equals(map.get("id"))) {
+            return JsonResult.error(202, "没有权限");
+        }
         boolean result = userService.updateById(user);
         if (result) {
             return JsonResult.success();

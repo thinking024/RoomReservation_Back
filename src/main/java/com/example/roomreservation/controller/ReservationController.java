@@ -10,6 +10,7 @@ import com.example.roomreservation.dto.ReservationDto;
 import com.example.roomreservation.pojo.Reservation;
 import com.example.roomreservation.service.ReservationService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -86,6 +87,7 @@ public class ReservationController {
     @AdminToken
     @UserToken
     @PostMapping("/cancel")
+    @Transactional
     public JsonResult<String> cancel(@RequestParam List<Integer> ids) {
         log.info("id数据" + ids);
         LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
@@ -98,6 +100,9 @@ public class ReservationController {
 
         List<Reservation> reservations = reservationService.list(wrapper);
         for (Reservation reservation : reservations) {
+            if (map.get("type") == 0 && !reservation.getUserId().equals(map.get("id"))) {
+                return JsonResult.error(202, "没有权限");
+            }
             reservation.setStatus(0);
         }
         if (reservationService.updateBatchById(reservations)) {

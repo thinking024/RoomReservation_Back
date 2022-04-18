@@ -83,7 +83,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 result(httpServletResponse, JsonResult.error(203, "token信息错误"));
                 return false;
             }
-            log.info("type={}", map.get("type"));
             BaseContext.setCurrent(map);
 
             return true;
@@ -102,7 +101,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 }
 
                 Map<String, Integer> map = JWTUtil.parseToken(token);
-                if (map.size() == 0) {
+                if (map.size() == 0 || map.get("type") != 1) {
                     log.warn("admin token error");
                     result(httpServletResponse, JsonResult.error(203, "token信息错误"));
                     return false;
@@ -126,7 +125,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 }
 
                 Map<String, Integer> map = JWTUtil.parseToken(token);
-                if (map.size() == 0) {
+                if (map.size() == 0 || map.get("type") != 0) {
                     log.warn("user token error");
                     result(httpServletResponse, JsonResult.error(203, "token信息错误"));
                     return false;
