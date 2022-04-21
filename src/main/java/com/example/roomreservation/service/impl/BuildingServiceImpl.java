@@ -13,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BuildingServiceImpl extends ServiceImpl<BuidingMapper, Building> implements BuildingService {
@@ -69,5 +71,17 @@ public class BuildingServiceImpl extends ServiceImpl<BuidingMapper, Building> im
             room.setStatus(status);
         }
         return this.updateBatchById(buildings) && roomService.updateBatchById(rooms);
+    }
+
+    @Override
+    public List<Map> getNameAndId(LambdaQueryWrapper<Building> wrapper) {
+        List<Map> maps = new ArrayList<>();
+        this.list(wrapper).forEach(building -> {
+            HashMap<String, Object> hashMap = new HashMap<>();
+            hashMap.put("value", building.getId());
+            hashMap.put("text", building.getName());
+            maps.add(hashMap);
+        });
+        return maps;
     }
 }

@@ -14,4 +14,6 @@ public interface ReservationService extends IService<Reservation> {
     ReservationDto getByIdWithDto(Integer id);
 
     List<ReservationDto> getWithDto(LambdaQueryWrapper<Reservation> wrapper);
+
+    boolean checkBeforeSave(Reservation reservation);
 }

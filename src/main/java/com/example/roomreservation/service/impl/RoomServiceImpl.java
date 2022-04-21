@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements RoomService {
@@ -93,6 +95,18 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
             list.add(room);
         }
         return this.updateBatchById(list);
+    }
+
+    @Override
+    public List<Map> getNameAndId(LambdaQueryWrapper<Room> wrapper) {
+        List<Map> maps = new ArrayList<>();
+        this.list(wrapper).forEach(room -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("value", room.getId());
+            map.put("text", room.getName());
+            maps.add(map);
+        });
+        return maps;
     }
 
 

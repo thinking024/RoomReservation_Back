@@ -1,7 +1,9 @@
 package com.example.roomreservation.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.roomreservation.annotation.AdminToken;
+import com.example.roomreservation.annotation.UserToken;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.dto.RoomDto;
 import com.example.roomreservation.pojo.Room;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -47,6 +50,15 @@ public class RoomController {
         log.info("id = {}", id);
         Room room = roomService.getById(id);
         return JsonResult.success(room);
+    }
+
+    @UserToken
+    @GetMapping("map/{buildingId}")
+    public JsonResult<List<Map>> getNameAndIdByMap(@PathVariable Integer buildingId) {
+        LambdaQueryWrapper<Room> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Room::getStatus, 1);
+        queryWrapper.eq(Room::getBuildingId, buildingId);
+        return JsonResult.success(roomService.getNameAndId(queryWrapper));
     }
 
     @AdminToken

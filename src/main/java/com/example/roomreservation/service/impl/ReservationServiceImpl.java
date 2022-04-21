@@ -3,6 +3,7 @@ package com.example.roomreservation.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.roomreservation.common.CustomException;
 import com.example.roomreservation.dto.ReservationDto;
 import com.example.roomreservation.mapper.ReservationMapper;
 import com.example.roomreservation.pojo.Reservation;
@@ -98,5 +99,22 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
             reservationDto.setBuildingName(buildingService.getById(room.getBuildingId()).getName());
             return reservationDto;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean checkBeforeSave(Reservation reservation) {
+        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ne(Reservation::getId, reservation.getId());
+        wrapper.eq(Reservation::getStatus, 1);
+        wrapper.eq(Reservation::getRoomId, reservation.getRoomId());
+        wrapper.eq(Reservation::getDate, reservation.getDate());
+
+        // todo: 时间段检查
+        wrapper.between(Reservation::getBeginTime, reservation.getBeginTime(), reservation.getEndTime());
+        wrapper.or(wrapper1 -> wrapper1.between(Reservation::getEndTime, reservation.getBeginTime(), reservation.getEndTime()));
+        if (this.count(wrapper) != 0) {
+            throw new CustomException("该时间段已被预约");
+        }
+        return this.save(reservation);
     }
 }

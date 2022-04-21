@@ -8,12 +8,18 @@ import com.example.roomreservation.common.BaseContext;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.dto.ReservationDto;
 import com.example.roomreservation.pojo.Reservation;
+import com.example.roomreservation.pojo.Room;
+import com.example.roomreservation.service.BuildingService;
 import com.example.roomreservation.service.ReservationService;
+import com.example.roomreservation.service.RoomService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +29,12 @@ import java.util.Map;
 public class ReservationController {
     @Resource
     private ReservationService reservationService;
+
+    @Resource
+    private BuildingService buildingService;
+
+    @Resource
+    private RoomService roomService;
 
     /**
      * 查询所有预约信息
@@ -55,6 +67,46 @@ public class ReservationController {
         LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reservation::getUserId, BaseContext.getCurrent().get("id"));
         return JsonResult.success(reservationService.pageWithDto(page, pageSize, wrapper));
+    }
+
+    /**
+     * todo 使用converter解决日期格式问题
+     *
+     * @param buildingId
+     * @param roomId
+     * @param date
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    @UserToken
+    @GetMapping()
+    public JsonResult<List<Reservation>> listByDateAndPlace(
+            Integer buildingId, Integer roomId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm:ss") LocalTime beginTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm:ss") LocalTime endTime) {
+
+        /*if (buildingId == null && roomId == null) {
+            return JsonResult.error(501,"请求参数错误");
+        }*/
+
+        LambdaQueryWrapper<Reservation> reservationWrapper = new LambdaQueryWrapper<>();
+        reservationWrapper.eq(Reservation::getStatus, 1);
+        if (roomId == null) {
+            // 未指定具体房间
+            LambdaQueryWrapper<Room> roomWrapper = new LambdaQueryWrapper<>();
+            roomWrapper.eq(Room::getBuildingId, buildingId);
+            List<Room> rooms = roomService.list(roomWrapper);
+            reservationWrapper.in(Reservation::getRoomId, rooms.stream().map(Room::getId).toArray());
+        } else {
+            reservationWrapper.eq(roomId != null, Reservation::getRoomId, roomId);
+        }
+
+        reservationWrapper.eq(date != null, Reservation::getDate, date);
+        reservationWrapper.ge(beginTime != null, Reservation::getBeginTime, beginTime);
+        reservationWrapper.le(endTime != null, Reservation::getEndTime, endTime);
+        return JsonResult.success(reservationService.list(reservationWrapper));
     }
 
     /**
@@ -115,5 +167,18 @@ public class ReservationController {
             return JsonResult.success("取消成功");
         }
         return JsonResult.error(301, "取消失败");
+    }
+
+    @UserToken
+    @PostMapping
+    public JsonResult<String> add(@RequestBody Reservation reservation) {
+        Map<String, Integer> map = BaseContext.getCurrent();
+        reservation.setUserId(map.get("id"));
+        reservation.setStatus(1);
+        // todo 提交预定前是否检查存在冲突
+        if (reservationService.checkBeforeSave(reservation)) {
+            return JsonResult.success("预订成功");
+        }
+        return JsonResult.error(301, "预订失败");
     }
 }

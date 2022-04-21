@@ -3,6 +3,7 @@ package com.example.roomreservation.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.roomreservation.annotation.AdminToken;
+import com.example.roomreservation.annotation.UserToken;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.pojo.Building;
 import com.example.roomreservation.service.BuildingService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -51,6 +53,19 @@ public class BuildingController {
     @GetMapping("/list")
     public JsonResult<List<Building>> list() {
         return JsonResult.success(buildingService.list());
+    }
+
+    /**
+     * 用户前端调用，获取可用的楼宇id、name
+     *
+     * @return
+     */
+    @UserToken
+    @GetMapping("/map")
+    public JsonResult<List<Map>> getNameAndIdByMap() {
+        LambdaQueryWrapper<Building> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Building::getStatus, 1);
+        return JsonResult.success(buildingService.getNameAndId(wrapper));
     }
 
     /**
