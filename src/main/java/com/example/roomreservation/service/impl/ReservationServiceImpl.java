@@ -41,7 +41,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         }
         wrapper.orderByDesc(Reservation::getDate);
         wrapper.orderByDesc(Reservation::getBeginTime);
-        this.page(reservationPage);
+        this.page(reservationPage, wrapper);
         Page<ReservationDto> reservationDtoPage = new Page<>(page, pageSize);
         BeanUtils.copyProperties(reservationPage, reservationDtoPage);
 

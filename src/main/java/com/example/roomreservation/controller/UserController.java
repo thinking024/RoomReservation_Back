@@ -35,7 +35,18 @@ public class UserController {
         if (one == null) {
             return JsonResult.error(202, "账户或密码错误");
         }
+        if (one.getStatus() == 0) {
+            return JsonResult.error(205, "账户已被禁用");
+        }
         return JsonResult.success(JWTUtil.createToken(one.getId(), 0));
+    }
+
+    @UserToken
+    @PostMapping("/logout")
+    public JsonResult<String> logout() {
+        // todo 清除token
+        BaseContext.removeCurrent();
+        return JsonResult.success();
     }
 
     // todo 批量新增用户

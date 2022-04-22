@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +48,25 @@ public class ReservationController {
      */
     @AdminToken
     @GetMapping("/page")
-    public JsonResult<Page<ReservationDto>> page(int page, int pageSize, Integer id) {
+    public JsonResult<Page<ReservationDto>> page(int page, int pageSize, Integer id,
+                                                 @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime beginTime,
+                                                 @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
         log.info("page = {},pageSize = {}", page, pageSize);
-        return JsonResult.success(reservationService.pageWithDto(page, pageSize, null));
+        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(id != null, Reservation::getId, id);
+        if (beginTime != null) {
+            wrapper.ge(Reservation::getBeginTime, beginTime.toLocalTime());
+            wrapper.ge(Reservation::getDate, beginTime.toLocalDate());
+        }
+        if (endTime != null) {
+            wrapper.le(Reservation::getEndTime, endTime.toLocalTime());
+            wrapper.le(Reservation::getDate, endTime.toLocalDate());
+        }
+        /*wrapper.ge(beginTime != null, Reservation::getDate, beginTime.toLocalDate());
+        wrapper.ge(beginTime != null, Reservation::getBeginTime, beginTime.toLocalTime());
+        wrapper.le(endTime != null, Reservation::getDate, endTime.toLocalDate());
+        wrapper.le(endTime != null, Reservation::getEndTime, endTime.toLocalTime());*/
+        return JsonResult.success(reservationService.pageWithDto(page, pageSize, wrapper));
     }
 
     /**
@@ -100,7 +117,7 @@ public class ReservationController {
             List<Room> rooms = roomService.list(roomWrapper);
             reservationWrapper.in(Reservation::getRoomId, rooms.stream().map(Room::getId).toArray());
         } else {
-            reservationWrapper.eq(roomId != null, Reservation::getRoomId, roomId);
+            reservationWrapper.eq(Reservation::getRoomId, roomId);
         }
 
         reservationWrapper.eq(date != null, Reservation::getDate, date);
