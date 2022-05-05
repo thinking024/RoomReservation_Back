@@ -6,12 +6,17 @@ import com.example.roomreservation.annotation.AdminToken;
 import com.example.roomreservation.annotation.UserToken;
 import com.example.roomreservation.common.JsonResult;
 import com.example.roomreservation.dto.RoomDto;
+import com.example.roomreservation.pojo.Reservation;
 import com.example.roomreservation.pojo.Room;
+import com.example.roomreservation.service.ReservationService;
 import com.example.roomreservation.service.RoomService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +26,8 @@ import java.util.Map;
 public class RoomController {
     @Resource
     private RoomService roomService;
+    @Resource
+    private ReservationService reservationService;
 
     @AdminToken
     @GetMapping("/page")
@@ -50,6 +57,44 @@ public class RoomController {
         log.info("id = {}", id);
         Room room = roomService.getById(id);
         return JsonResult.success(room);
+    }
+
+    /**
+     * 查找可预定的房间
+     *
+     * @param buildingId
+     * @param roomId
+     * @param date
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    @UserToken
+    @GetMapping("/able")
+    public JsonResult<List<Room>> able(
+            Integer buildingId, Integer roomId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm:ss") LocalTime beginTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm:ss") LocalTime endTime) {
+        LambdaQueryWrapper<Room> roomWrapper = new LambdaQueryWrapper<>();
+        roomWrapper.eq(Room::getBuildingId, buildingId);
+        roomWrapper.eq(Room::getStatus, 1);
+        // 未指定具体房间
+        roomWrapper.eq(roomId != null, Room::getId, roomId);
+
+        LambdaQueryWrapper<Reservation> reservationWrapper = new LambdaQueryWrapper<>();
+        reservationWrapper.eq(Reservation::getStatus, 1);
+        reservationWrapper.eq(date != null, Reservation::getDate, date);
+        reservationWrapper.ge(beginTime != null, Reservation::getBeginTime, beginTime);
+        reservationWrapper.le(endTime != null, Reservation::getEndTime, endTime);
+        /*reservationService.list(reservationWrapper).forEach(reservation -> {
+            roomWrapper.ne(Room::getId, reservation.getRoomId());
+        });*/
+        List<Reservation> reservations = reservationService.list(reservationWrapper);
+        if (reservations.size() > 0) {
+            roomWrapper.notIn(Room::getId, reservations.stream().map(Reservation::getRoomId).toArray());
+        }
+        return JsonResult.success(roomService.list(roomWrapper));
     }
 
     @UserToken

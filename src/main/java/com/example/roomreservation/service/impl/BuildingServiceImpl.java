@@ -70,7 +70,11 @@ public class BuildingServiceImpl extends ServiceImpl<BuidingMapper, Building> im
         for (Room room : rooms) {
             room.setStatus(status);
         }
-        return this.updateBatchById(buildings) && roomService.updateBatchById(rooms);
+        if (rooms != null && rooms.size() > 0) {
+            roomService.updateBatchById(rooms);
+            return this.updateBatchById(buildings) && roomService.updateBatchById(rooms);
+        }
+        return this.updateBatchById(buildings);
     }
 
     @Override

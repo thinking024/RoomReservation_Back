@@ -87,6 +87,7 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
                     log.error("此建筑楼已被禁用，无法启用房间");
                     throw new CustomException("所属建筑楼已被禁用，无法开放房间，请先启用建筑楼");
                 }
+                room.setStatus(1);
             } else {
                 room = new Room();
                 room.setId(id);

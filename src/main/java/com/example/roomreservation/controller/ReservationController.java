@@ -192,6 +192,8 @@ public class ReservationController {
         Map<String, Integer> map = BaseContext.getCurrent();
         reservation.setUserId(map.get("id"));
         reservation.setStatus(1);
+        reservation.setTelephone("");
+        reservation.setImportant(0);
         // todo 提交预定前是否检查存在冲突
         if (reservationService.checkBeforeSave(reservation)) {
             return JsonResult.success("预订成功");
