@@ -14,5 +14,5 @@ public class User implements Serializable {
     private String name;
     private String telephone;
     private Integer status;
-    private Integer count; // todo
+    // private Integer count;
 }

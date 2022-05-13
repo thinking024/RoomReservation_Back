@@ -44,12 +44,11 @@ public class UserController {
     @UserToken
     @PostMapping("/logout")
     public JsonResult<String> logout() {
-        // todo 清除token
+        // 服务器端无法删除token
         BaseContext.removeCurrent();
         return JsonResult.success();
     }
 
-    // todo 批量新增用户
     @AdminToken
     @PostMapping("/addBatch")
     public JsonResult<String> addBatch(@RequestBody List<User> users) {
@@ -77,7 +76,6 @@ public class UserController {
         return JsonResult.error(301, "删除失败");
     }
 
-    // todo 对于姓名、电话为null，并不会将其置为null，而是保留原来的值
     @UserToken
     @AdminToken
     @PutMapping()
@@ -128,8 +126,6 @@ public class UserController {
     }
 
     /**
-     * todo me
-     *
      * @return
      */
     @UserToken

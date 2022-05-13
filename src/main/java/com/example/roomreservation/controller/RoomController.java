@@ -33,15 +33,6 @@ public class RoomController {
     @GetMapping("/page")
     public JsonResult<Page<RoomDto>> page(int page, int pageSize, String buildingName) {
         log.info("page = {},pageSize = {}", page, pageSize);
-        // 构造分页构造器
-//        Page<Room> pageInfo = new Page<>(page, pageSize);
-        // 构造条件构造器
-//        LambdaQueryWrapper<Room> queryWrapper = new LambdaQueryWrapper<>();
-        // 添加过滤条件，传入name时才去查询，否则不添加name查询条件
-//        todo 按照楼层查询
-//        queryWrapper.eq(StringUtils.isNotEmpty(buildingName), Room::getName, name);
-//        roomService.page(pageInfo, queryWrapper);
-
         return JsonResult.success(roomService.pageWithDto(page, pageSize));
     }
 

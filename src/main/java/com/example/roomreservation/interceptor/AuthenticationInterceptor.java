@@ -67,7 +67,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         String token = authorization.split(" ")[1];
         log.info("token: {}", token);
 
-        // todo 用户和管理员都能访问的接口
+        // 用户和管理员都能访问的接口
         if (method.isAnnotationPresent(UserToken.class) && method.isAnnotationPresent(AdminToken.class)) {
             log.info("user and admin token");
 
@@ -112,7 +112,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             }
         }
 
-        // todo 如何从token中区分用户和管理员
         if (method.isAnnotationPresent(UserToken.class)) {
             UserToken userToken = method.getAnnotation(UserToken.class);
             log.info("user token");
@@ -140,12 +139,12 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) throws Exception {
+    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) {
 
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
+    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) {
 
     }
 }

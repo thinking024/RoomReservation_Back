@@ -37,7 +37,7 @@ public class AdminController {
     @AdminToken
     @PostMapping("/logout")
     public JsonResult<String> logout() {
-        // todo 清除token
+        // 服务器端无法主动让token失效
         BaseContext.removeCurrent();
         return JsonResult.success();
     }

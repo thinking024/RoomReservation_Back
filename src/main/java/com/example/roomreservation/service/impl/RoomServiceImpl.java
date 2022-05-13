@@ -75,6 +75,7 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
     @Transactional
     @Override
     public boolean changeStatusBatchById(int status, List<Integer> ids) {
+        // todo 房间禁用后，预订怎么办
         ArrayList<Room> list = new ArrayList<>();
         for (Integer id : ids) {
             Room room;

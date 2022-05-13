@@ -35,7 +35,6 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     @Override
     public Page<ReservationDto> pageWithDto(int page, int pageSize, LambdaQueryWrapper<Reservation> wrapper) {
         Page<Reservation> reservationPage = new Page<>(page, pageSize);
-//        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
         if (wrapper == null) {
             wrapper = new LambdaQueryWrapper<>();
         }
@@ -54,10 +53,11 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
             reservationDto.setRoomName(room.getName());
             reservationDto.setBuildingName(buildingService.getById(room.getBuildingId()).getName());
 
-            // 获取用户名、账号用户名
+            // 获取用户名、账号用户名、电话号码
             User user = userService.getById(reservation.getUserId());
             reservationDto.setUsername(user.getName());
             reservationDto.setAccount(user.getAccount());
+            reservationDto.setTelephone(user.getTelephone());
             return reservationDto;
         }).collect(java.util.stream.Collectors.toList()));
 
@@ -79,6 +79,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         User user = userService.getById(reservation.getUserId());
         reservationDto.setUsername(user.getName());
         reservationDto.setAccount(user.getAccount());
+        reservationDto.setTelephone(user.getTelephone());
         return reservationDto;
     }
 
@@ -108,10 +109,9 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         wrapper.eq(Reservation::getStatus, 1);
         wrapper.eq(Reservation::getRoomId, reservation.getRoomId());
         wrapper.eq(Reservation::getDate, reservation.getDate());
-
-        // todo: 时间段检查
-        wrapper.between(Reservation::getBeginTime, reservation.getBeginTime(), reservation.getEndTime());
-        wrapper.or(wrapper1 -> wrapper1.between(Reservation::getEndTime, reservation.getBeginTime(), reservation.getEndTime()));
+        // 起始时间在预定时间段内，或者结束时间在预定时间段内
+        wrapper.and(wrapper1 -> wrapper1.between(Reservation::getBeginTime, reservation.getBeginTime(), reservation.getEndTime()).
+                or().between(Reservation::getEndTime, reservation.getBeginTime(), reservation.getEndTime()));
         if (this.count(wrapper) != 0) {
             throw new CustomException("该时间段已被预约");
         }

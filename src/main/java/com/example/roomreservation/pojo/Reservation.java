@@ -14,7 +14,6 @@ public class Reservation implements Serializable {
     private Integer id;
     private Integer userId;
     private Integer roomId;
-    private String telephone;
     private Integer status; // todo
     @TableField(value = "is_important")
     private Integer important;

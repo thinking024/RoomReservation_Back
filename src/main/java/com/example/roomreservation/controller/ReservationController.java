@@ -39,7 +39,6 @@ public class ReservationController {
 
     /**
      * 查询所有预约信息
-     * todo 根据用户名查询预定情况
      *
      * @param page
      * @param pageSize
@@ -71,7 +70,6 @@ public class ReservationController {
 
     /**
      * 用户分页查询自己的预定信息
-     * todo me
      *
      * @param page
      * @param pageSize
@@ -87,7 +85,6 @@ public class ReservationController {
     }
 
     /**
-     * todo 使用converter解决日期格式问题
      *
      * @param buildingId
      * @param roomId
@@ -151,7 +148,6 @@ public class ReservationController {
 
     /**
      * 取消预订
-     * todo 管理员和用户都可以访问此接口
      */
     @AdminToken
     @UserToken
@@ -178,7 +174,7 @@ public class ReservationController {
             // 身份为管理员，则发送短信通知用户
             if (map.get("type") == 1) {
                 for (Reservation reservation : reservations) {
-                    // todo 发送邮件/短信通知
+                    // todo 发送短信通知
                 }
             }
             return JsonResult.success("取消成功");
@@ -192,9 +188,7 @@ public class ReservationController {
         Map<String, Integer> map = BaseContext.getCurrent();
         reservation.setUserId(map.get("id"));
         reservation.setStatus(1);
-        reservation.setTelephone("");
         reservation.setImportant(0);
-        // todo 提交预定前是否检查存在冲突
         if (reservationService.checkBeforeSave(reservation)) {
             return JsonResult.success("预订成功");
         }

@@ -9,6 +9,7 @@ public class ReservationDto extends Reservation {
     private String username;
     private String buildingName;
     private String roomName;
+    private String telephone;
 
     @Override
     public String toString() {
@@ -17,6 +18,7 @@ public class ReservationDto extends Reservation {
                 ",username='" + username + '\'' +
                 ", buildingName='" + buildingName + '\'' +
                 ", roomName='" + roomName + '\'' +
+                ", telephone='" + telephone + '\'' +
                 '}' + super.toString();
     }
 }
