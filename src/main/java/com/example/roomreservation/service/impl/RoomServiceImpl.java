@@ -7,8 +7,10 @@ import com.example.roomreservation.common.CustomException;
 import com.example.roomreservation.dto.RoomDto;
 import com.example.roomreservation.mapper.RoomMapper;
 import com.example.roomreservation.pojo.Building;
+import com.example.roomreservation.pojo.Reservation;
 import com.example.roomreservation.pojo.Room;
 import com.example.roomreservation.service.BuildingService;
+import com.example.roomreservation.service.ReservationService;
 import com.example.roomreservation.service.RoomService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,9 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
 
     @Resource
     private BuildingService buildingService;
+
+    @Resource
+    private ReservationService reservationService;
 
     @Override
     public Page<RoomDto> pageWithDto(int page, int pageSize) {
@@ -75,11 +80,11 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
     @Transactional
     @Override
     public boolean changeStatusBatchById(int status, List<Integer> ids) {
-        // todo 房间禁用后，预订怎么办
         ArrayList<Room> list = new ArrayList<>();
         for (Integer id : ids) {
             Room room;
             if (status == 1) {
+                // 启用房间，需要先检查所属建筑楼状态
                 room = this.getById(id);
                 LambdaQueryWrapper<Building> buildingWrapper = new LambdaQueryWrapper<>();
                 buildingWrapper.eq(Building::getId, room.getBuildingId());
@@ -90,9 +95,17 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
                 }
                 room.setStatus(1);
             } else {
+                // 禁用房间，取消预约
                 room = new Room();
                 room.setId(id);
                 room.setStatus(status);
+                LambdaQueryWrapper<Reservation> reservationWrapper = new LambdaQueryWrapper<>();
+                reservationWrapper.eq(Reservation::getRoomId, id);
+                reservationWrapper.eq(Reservation::getStatus, 1);
+                reservationService.list(reservationWrapper).forEach(reservation -> {
+                    reservation.setStatus(0);
+                    reservationService.updateById(reservation);
+                });
             }
             list.add(room);
         }
@@ -109,6 +122,11 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
             maps.add(map);
         });
         return maps;
+    }
+
+    @Override
+    public boolean deleteBatchById(List<Integer> ids) {
+        return false;
     }
 
 

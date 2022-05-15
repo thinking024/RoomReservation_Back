@@ -137,7 +137,6 @@ public class RoomController {
 
     /**
      * 批量删除
-     * todo 是否考虑做逻辑删除，会议室删除后，预定怎么办
      *
      * @param ids
      * @return

@@ -36,6 +36,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public JsonResult<String> exceptionHandler(CustomException ex) {
         log.error(ex.getMessage());
+        if (ex.getCode() != null) {
+            return JsonResult.error(ex.getCode(), ex.getMessage());
+        }
         return JsonResult.error(ex.getMessage());
     }
 }

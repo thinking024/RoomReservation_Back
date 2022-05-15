@@ -174,7 +174,6 @@ public class ReservationController {
             // 身份为管理员，则发送短信通知用户
             if (map.get("type") == 1) {
                 for (Reservation reservation : reservations) {
-                    // todo 发送短信通知
                 }
             }
             return JsonResult.success("取消成功");

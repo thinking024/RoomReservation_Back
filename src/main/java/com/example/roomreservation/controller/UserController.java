@@ -50,12 +50,12 @@ public class UserController {
     }
 
     @AdminToken
-    @PostMapping("/addBatch")
-    public JsonResult<String> addBatch(@RequestBody List<User> users) {
-        if (userService.saveBatch(users)) {
+    @DeleteMapping()
+    public JsonResult<String> delete(@RequestParam List<Integer> ids) {
+        if (userService.removeByIds(ids)) {
             return JsonResult.success();
         }
-        return JsonResult.error(301, "添加失败");
+        return JsonResult.error(301, "删除失败");
     }
 
     @AdminToken
@@ -67,14 +67,14 @@ public class UserController {
         return JsonResult.error(301, "添加失败");
     }
 
-    @AdminToken
+    /*@AdminToken
     @DeleteMapping()
     public JsonResult<String> delete(Integer id) {
         if (userService.removeById(id)) {
             return JsonResult.success();
         }
         return JsonResult.error(301, "删除失败");
-    }
+    }*/
 
     @UserToken
     @AdminToken

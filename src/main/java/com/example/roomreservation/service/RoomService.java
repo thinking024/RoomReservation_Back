@@ -19,4 +19,6 @@ public interface RoomService extends IService<Room> {
     boolean changeStatusBatchById(int status, List<Integer> ids);
 
     List<Map> getNameAndId(LambdaQueryWrapper<Room> wrapper);
+
+    boolean deleteBatchById(List<Integer> ids);
 }

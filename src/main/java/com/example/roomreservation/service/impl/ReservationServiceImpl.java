@@ -13,13 +13,20 @@ import com.example.roomreservation.service.BuildingService;
 import com.example.roomreservation.service.ReservationService;
 import com.example.roomreservation.service.RoomService;
 import com.example.roomreservation.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reservation> implements ReservationService {
 
@@ -31,6 +38,26 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
 
     @Resource
     private UserService userService;
+
+    /**
+     * 自定义定时任务类，到期后更改预定状态
+     */
+    class ChangeStatusTask implements Runnable {
+        private Integer id;
+
+        public ChangeStatusTask(Integer id) {
+            this.id = id;
+        }
+
+        // 在结束时间到的时候更改状态
+        @Override
+        public void run() {
+            log.info(LocalDateTime.now() + ",执行定时任务," + id);
+            Reservation reservation = getById(id);
+            reservation.setStatus(2);
+            updateById(reservation);
+        }
+    }
 
     @Override
     public Page<ReservationDto> pageWithDto(int page, int pageSize, LambdaQueryWrapper<Reservation> wrapper) {
@@ -115,6 +142,15 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         if (this.count(wrapper) != 0) {
             throw new CustomException("该时间段已被预约");
         }
-        return this.save(reservation);
+        if (this.save(reservation)) {
+            ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
+            LocalDateTime endDateTime = LocalDateTime.of(reservation.getDate(), reservation.getEndTime());
+            LocalDateTime now = LocalDateTime.now();
+            Duration duration = Duration.between(now, endDateTime);
+            executor.schedule(new ChangeStatusTask(reservation.getId()), duration.toMillis(), TimeUnit.MILLISECONDS);
+            log.info(LocalDateTime.now() + ", 开始创建定时任务, " + reservation.getId() + ", " + duration.toMinutes() + ", " + duration.toMillis());
+            return true;
+        }
+        return false;
     }
 }

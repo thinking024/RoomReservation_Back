@@ -118,7 +118,6 @@ public class BuildingController {
 
     /**
      * 批量删除
-     * todo 是否要做逻辑删除，删除联动怎么办
      *
      * @param ids
      * @return
@@ -127,7 +126,8 @@ public class BuildingController {
     @DeleteMapping
     public JsonResult<String> delete(@RequestParam List<Integer> ids) {
         log.info("ids:{}", ids);
-        buildingService.removeBatchById(ids);
+//        buildingService.removeBatchById(ids);
+        buildingService.removeByIds(ids);
         return JsonResult.success("删除成功");
     }
 }

@@ -7,7 +7,6 @@ import com.example.roomreservation.pojo.Building;
 import com.example.roomreservation.pojo.Room;
 import com.example.roomreservation.service.BuildingService;
 import com.example.roomreservation.service.RoomService;
-import com.example.roomreservation.util.FileUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,21 +25,9 @@ public class BuildingServiceImpl extends ServiceImpl<BuidingMapper, Building> im
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeBatchById(List<Integer> ids) {
-        // todo 建筑楼与房间之间删除的联动
-
-        /*int count = this.count(queryWrapper);
-        if(count > 0){
-            //如果不能删除，抛出一个业务异常
-            throw new CustomException("套餐正在售卖中，不能删除");
-        }*/
-
-        // 删除图片
         LambdaQueryWrapper<Building> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(Building::getId, ids);
         List<Building> list = this.list(queryWrapper);
-        for (Building building : list) {
-            FileUtil.deleteFile(building.getImage());
-        }
         this.removeByIds(ids);
     }
 
