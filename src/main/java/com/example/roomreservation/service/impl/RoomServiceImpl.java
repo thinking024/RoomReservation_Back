@@ -54,13 +54,18 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
 
     @Override
     public boolean addUniqueRoom(Room room) {
+        Integer buildingId = room.getBuildingId();
         LambdaQueryWrapper<Room> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Room::getBuildingId, room.getBuildingId());
+        queryWrapper.eq(Room::getBuildingId, buildingId);
         queryWrapper.eq(Room::getName, room.getName());
-        if (this.count(queryWrapper) == 0) {
-            return this.save(room);
+        if (this.count(queryWrapper) != 0) {
+            throw new CustomException("此建筑楼中已存在名为" + room.getName() + "的房间");
         }
-        throw new CustomException("此建筑楼中已存在名为" + room.getName() + "的房间");
+        /*LambdaQueryWrapper<Building> buildingWrapper = new LambdaQueryWrapper<>();
+        buildingWrapper.eq(Building::getId, buildingId);
+        buildingService.getOne()
+        room.setStatus();*/
+        return this.save(room);
 //        return false;
     }
 

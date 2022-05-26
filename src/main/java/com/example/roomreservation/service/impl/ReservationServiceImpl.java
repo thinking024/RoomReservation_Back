@@ -54,6 +54,9 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         public void run() {
             log.info(LocalDateTime.now() + ",执行定时任务," + id);
             Reservation reservation = getById(id);
+            if (reservation == null || reservation.getStatus() == 0) {
+                return;
+            }
             reservation.setStatus(2);
             updateById(reservation);
         }
